@@ -1,7 +1,10 @@
 import { Card } from '@/components/ui/card'
 import { MainCard } from '@/components/MainCard';
 import { Separator } from '@/components/ui/separator';
+import { fetchSheetData } from '@/services/sheets';
 import './App.css'
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 
 type ProjectItem = {
@@ -12,31 +15,33 @@ type ProjectItem = {
   background: string
 }
 
-type ProjectProps = {
-  items: ProjectItem[]
+
+async function getProjects(): Promise<ProjectItem[]> {
+  const data = await fetchSheetData();
+  return data.map((row: Record<string, string>): ProjectItem => ({
+    id: Number.parseInt(row.id),
+    title: row.title,
+    description: row.description,
+    link: row.link,
+    background: row.background
+  }));
 }
 
-const items = [
-  {
-    id: 1,
-    title: 'bynd.bio',
-    description: 'AI enabled CRO sales automation platform',
-    link: 'https://www.bynd.bio',
-    background: './images/bynd-logo.png'
-  }
-]
-
-function ProjectCards({ items }: ProjectProps) {
+function ProjectCards({ items }: { items: ProjectItem[] }) {
   return (
     <>
       {items.map((item) => {
-        const cardStyles = `w-[300px] h-[224px] bg-contain bg-center bg-no-repeat relative rounded-lg bg-url('${item.background}')`
-        console.log(cardStyles)
+        const cardStyles = 'w-[300px] h-[224px] bg-contain bg-center bg-no-repeat relative rounded-lg'
         return (
         <a key={item.id} href={item.link} target="_blank" rel="noreferrer">
           <Card className={cardStyles}>
-            <div className="opacity-0 hover:opacity-75 duration-300 absolute inset-0 z-10 flex justify-center items-center text-2xl font-semibold bg-black text-white bg-blend-overlay rounded-lg">
-              <div className='flex flex-col items-center'>
+            <div className="overflow-hidden h-full w-full object-cover rounded-lg">
+              <img 
+               className='overflow-hidden h-full w-full object-cover rounded-lg'
+               src={item.background}
+               alt='Logo'
+              /> 
+              <div className='opacity-0 hover:opacity-75 duration-300 absolute inset-0 z-10 justify-center text-2xl font-semibold bg-black text-white bg-blend-overlay rounded-lg flex flex-col items-center'>
                 <p className='font-bold'>{item.title}</p>
                 <p className='font-thin'>{item.description}</p>
               </div>
@@ -51,6 +56,12 @@ function ProjectCards({ items }: ProjectProps) {
 }
 
 function App() {  
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+
+  useEffect(() => {
+    getProjects().then(setProjects);
+  }, []);
+
   return (
     <div>
       <MainCard />
@@ -61,7 +72,7 @@ function App() {
         </div>
       </div>
       <div className='grid grid-cols-3 gap-8 mt-4 justify-between'>
-        <ProjectCards items={items} />
+        <ProjectCards items={projects} />
       </div>
     </div>
   )
